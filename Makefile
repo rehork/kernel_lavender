@@ -301,10 +301,16 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
 	  else echo sh; fi ; fi)
 
-HOSTCC       = gcc
-HOSTCXX      = g++
-HOSTCFLAGS   := -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89
-HOSTCXXFLAGS = -O2
+ifneq ($(LLVM),)
+HOSTCC = clang
+HOSTCXX = clang++
+else
+HOSTCC = gcc
+HOSTCXX = g++
+endif
+
+HOSTCFLAGS = -Wall -Wmissing-prototypes -Wstrict-prototypes -Ofast -fomit-frame-pointer -mcpu=native -mtune=native -pipe
+HOSTCXXFLAGS = -Ofast -mcpu=native -mtune=native -pipe
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -336,34 +342,53 @@ export KBUILD_CHECKSRC KBUILD_SRC KBUILD_EXTMOD
 scripts/Kbuild.include: ;
 include scripts/Kbuild.include
 
-# Make variables (CC, etc...)
-AS		= $(CROSS_COMPILE)as
-LD		= $(CROSS_COMPILE)ld
-CC		= $(CROSS_COMPILE)gcc
-CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE)ar
-NM		= $(CROSS_COMPILE)nm
-STRIP		= $(CROSS_COMPILE)strip
-OBJCOPY		= $(CROSS_COMPILE)objcopy
-OBJDUMP		= $(CROSS_COMPILE)objdump
-AWK		= awk
-GENKSYMS	= scripts/genksyms/genksyms
-INSTALLKERNEL  := installkernel
-DEPMOD		= depmod
-PERL		= perl
-PYTHON		= python
-CHECK		= sparse
-
-CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
-		  -Wbitwise -Wno-return-void $(CF)
-CFLAGS_MODULE   =
-AFLAGS_MODULE   =
-LDFLAGS_MODULE  =
-CFLAGS_KERNEL	=
-AFLAGS_KERNEL	=
-CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage -fno-tree-loop-im
-CFLAGS_KCOV	= -fsanitize-coverage=trace-pc
-
+# Make variables (CC, etc...).
+ifneq ($(LLVM),)
+AR = llvm-ar
+CC = clang
+LD = ld.lld
+NM = llvm-nm
+OBJCOPY = llvm-objcopy
+OBJDUMP = llvm-objdump
+OBJSIZE = llvm-size
+READELF = llvm-readelf
+STRIP = llvm-strip
+else
+AR = $(CROSS_COMPILE)ar
+AS = $(CROSS_COMPILE)as
+CC = $(CROSS_COMPILE)gcc
+LD = $(CROSS_COMPILE)ld
+NM = $(CROSS_COMPILE)nm
+OBJCOPY = $(CROSS_COMPILE)objcopy
+OBJDUMP = $(CROSS_COMPILE)objdump
+STRIP = $(CROSS_COMPILE)strip
+endif
+AFLAGS_KERNEL :=
+AFLAGS_MODULE :=
+AWK := awk
+CFLAGS_GCOV := -fprofile-arcs -ftest-coverage -fno-tree-loop-im
+CFLAGS_KCOV := -fsanitize-coverage=trace-pc
+CFLAGS_KERNEL :=
+CFLAGS_MODULE :=
+CHECK := sparse
+CHECKFLAGS := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ -Wno-return-void $(CF)
+CLANG_FLAGS :=
+CPP := $(CC) -E
+DEPMOD := depmod
+GENKSYMS := scripts/genksyms/genksyms
+INSTALLKERNEL := installkernel
+KBUILD_AFLAGS := -D__ASSEMBLY__ $(call cc-option,-fno-PIE)
+KBUILD_AFLAGS_KERNEL :=
+KBUILD_AFLAGS_MODULE := -DMODULE
+KBUILD_CFLAGS := -pipe $(call cc-option,-fno-PIE)
+KBUILD_CFLAGS_KERNEL :=
+KBUILD_CFLAGS_MODULE := -DMODULE
+KBUILD_CPPFLAGS := -D__KERNEL__ -pipe
+KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
+LDFLAGS_MODULE :=
+LDLLD = ld.lld
+PERL := perl
+PYTHON := python
 
 # Use USERINCLUDE when you must reference the UAPI directories only.
 USERINCLUDE    := \
@@ -385,14 +410,38 @@ LINUXINCLUDE    := \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
-KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common \
-		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -std=gnu89 $(call cc-option,-fno-PIE)
-
-ifeq ($(TARGET_BOARD_TYPE),auto)
-KBUILD_CFLAGS    += -DCONFIG_PLATFORM_AUTO
+# Use arch specific optimization
+ifeq ($(cc-name),clang)
+KBUILD_CFLAGS += \
+		-fdiagnostics-color \
+		-mcpu=cortex-a73 \
+		-mtune=cortex-a73 \
+		-mllvm -polly \
+		-mllvm -polly-ast-use-context \
+		-mllvm -polly-detect-keep-going \
+		-mllvm -polly-invariant-load-hoisting \
+		-mllvm -polly-opt-fusion=max \
+		-mllvm -polly-run-dce \
+		-mllvm -polly-run-inliner \
+		-mllvm -polly-vectorizer=stripmine
+KBUILD_AFLAGS += \
+		-mcpu=cortex-a73 \
+		-mtune=cortex-a73
+else
+KBUILD_CFLAGS += \
+		-fdiagnostics-color \
+		-fgraphite \
+		-fgraphite-identity \
+		-fira-loop-pressure \
+		-floop-nest-optimize \
+		-fmodulo-sched \
+		-fmodulo-sched-allow-regmoves \
+		-ftree-vectorize \
+		-mcpu=cortex-a73.cortex-a53 \
+		-mtune=cortex-a73.cortex-a53
+KBUILD_AFLAGS += \
+		-mcpu=cortex-a73.cortex-a53 \
+		-mtune=cortex-a73.cortex-a53
 endif
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
