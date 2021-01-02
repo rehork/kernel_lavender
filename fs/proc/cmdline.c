@@ -50,6 +50,7 @@ static void patch_safetynet_flags(char *cmd)
 
 static int __init proc_cmdline_init(void)
 {
+
 	strcpy(new_command_line, saved_command_line);
 
 	/*
@@ -57,6 +58,26 @@ static int __init proc_cmdline_init(void)
 	 * pass SafetyNet checks.
 	 */
 	patch_safetynet_flags(new_command_line);
+
+        char *search = "skip_initramfs";
+        char *replace = "androidboot.force_normal_boot=1";
+
+	char *offset_addr, *cmd = new_command_line;
+	size_t search_len, replace_len;
+
+	strcpy(cmd, saved_command_line);
+
+        search_len = strlen(search);
+        replace_len = strlen(replace);
+
+	offset_addr = strstr(cmd, search);
+	if (offset_addr) {
+		size_t tail_len;
+		tail_len = strlen(offset_addr+search_len);
+
+		memmove(offset_addr+replace_len,offset_addr+search_len,tail_len+1);
+		memcpy(offset_addr, replace, replace_len);
+	}
 
 	proc_create("cmdline", 0, NULL, &cmdline_proc_fops);
 	return 0;
