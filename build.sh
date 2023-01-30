@@ -11,7 +11,7 @@ KERNEL_DIR="$(pwd)"
 ZIPNAME="Mimir-Kernel"
 
 # Specify compiler ( eva , azure , proton , arter , aosp & nexus )
-COMPILER=nexus
+COMPILER=nexus+KSU
 
 # Device Name and Model
 DEVICE=lavender
@@ -33,7 +33,7 @@ KERVER=$(make kernelversion)
 
 COMMIT_HEAD=$(git log --oneline -1)
 
-FINAL_ZIP=${ZIPNAME}-EAS-${DEVICE}.zip
+FINAL_ZIP=${ZIPNAME}-EAS-KSU-${DEVICE}.zip
 ##----------------------------------------------------------##
 
 # Cloning Dependencies
@@ -50,6 +50,10 @@ function clone() {
 		elif [ $COMPILER = "nexus" ]; then
 		git clone --depth=1 -b nexus-14  https://gitlab.com/Project-Nexus/nexus-clang.git clang
 		PATH="${KERNEL_DIR}/clang/bin:$PATH"
+                elif [ $COMPILER = "nexus+KSU" ]; then
+                git clone --depth=1 -b nexus-14  https://gitlab.com/Project-Nexus/nexus-clang.git clang
+                rm -rf KernelSU && curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+                PATH="${KERNEL_DIR}/clang/bin:$PATH"
 		elif [ $COMPILER = "aosp" ]; then
 		post_msg " Cloning Aosp Clang 14.0.2 ToolChain "
 		git clone --depth=1 https://gitlab.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r445002.git -b 12.0 aosp-clang
