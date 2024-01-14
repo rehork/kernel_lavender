@@ -85,7 +85,7 @@
     <string name="app_profile_template_create">创建模版</string>
     <string name="app_profile_template_edit">编辑模版</string>
     <string name="app_profile_template_id">模版 id</string>
-    <string name="app_profile_template_id_invalid">模版 id 不合法！</string>
+    <string name="app_profile_template_id_invalid">模版 id 不合法</string>
     <string name="app_profile_template_name">名字</string>
     <string name="app_profile_template_description">描述</string>
     <string name="app_profile_template_save">保存</string>
@@ -101,4 +101,5 @@
     <string name="app_profile_template_sync">同步在线规则</string>
     <string name="app_profile_template_save_failed">模版保存失败！</string>
     <string name="app_profile_template_import_empty">剪切板为空！</string>
+    <string name="module_changelog_failed">获取更新日志失败：%s</string>
 </resources>
