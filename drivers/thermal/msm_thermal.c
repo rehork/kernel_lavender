@@ -1272,8 +1272,10 @@ static int create_thermal_debugfs(void)
 			0600, msm_therm_debugfs->parent, &tsens_temp_print);
 	if (IS_ERR(msm_therm_debugfs->tsens_print)) {
 		ret = PTR_ERR(msm_therm_debugfs->tsens_print);
+#ifdef CONFIG_DEBUG_FS
 		pr_err("Error creating debugfs:[%s]. err:%d\n",
 			MSM_TSENS_PRINT, ret);
+#endif
 		goto create_exit;
 	}
 
@@ -2336,6 +2338,7 @@ static ssize_t ocr_reg_mode_store(struct kobject *kobj,
 		pr_err("Invalid value %d for mode\n", val);
 		goto done_ocr_store;
 	}
+		goto done_ocr_store;
 
 	if (val != reg->mode) {
 		ret = request_optimum_current(reg, val);
@@ -2430,6 +2433,7 @@ static ssize_t psm_reg_mode_store(struct kobject *kobj,
 		pr_err("Invalid number %d for mode\n", val);
 		goto done_psm_store;
 	}
+		goto done_psm_store;
 
 	if (val != reg->mode) {
 		ret = rpm_regulator_set_mode(reg->reg, val);
@@ -3183,14 +3187,12 @@ static __ref int do_hotplug(void *data)
 	int ret = 0;
 	uint32_t cpu = 0, mask = 0;
 	struct device_clnt_data *clnt = NULL;
-	struct sched_param param = {.sched_priority = MAX_RT_PRIO-2};
 
 	if (!core_control_enabled) {
 		pr_debug("Core control disabled\n");
 		return -EINVAL;
 	}
 
-	sched_setscheduler(current, SCHED_FIFO, &param);
 	while (!kthread_should_stop()) {
 		while (wait_for_completion_interruptible(
 			&hotplug_notify_complete) != 0)
@@ -3838,12 +3840,10 @@ static __ref int do_freq_mitigation(void *data)
 {
 	int ret = 0;
 	uint32_t cpu = 0, max_freq_req = 0, min_freq_req = 0;
-	struct sched_param param = {.sched_priority = MAX_RT_PRIO-1};
 	struct device_clnt_data *clnt = NULL;
 	struct device_manager_data *cpu_dev = NULL;
 	uint32_t changed;
 
-	sched_setscheduler(current, SCHED_FIFO, &param);
 	while (!kthread_should_stop()) {
 		while (wait_for_completion_interruptible(
 			&freq_mitigation_complete) != 0)
@@ -5006,6 +5006,7 @@ static ssize_t __ref store_cc_enabled(struct kobject *kobj,
 		pr_info("Core control enabled\n");
 		cpus_previously_online_update();
 		register_cpu_notifier(&msm_thermal_cpu_notifier);
+		goto done_store_cc;
 		/*
 		 * Re-evaluate thermal core condition, update current status
 		 * and set threshold for all cpus.
@@ -5060,6 +5061,7 @@ static ssize_t __ref store_cpus_offlined(struct kobject *kobj,
 		pr_err("Ignoring request; polling thread is enabled.\n");
 		goto done_cc;
 	}
+		goto done_cc;
 
 	for_each_possible_cpu(cpu) {
 		if (!(msm_thermal_info.core_control_mask & BIT(cpu)))
