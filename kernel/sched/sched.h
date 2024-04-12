@@ -228,7 +228,6 @@ struct cfs_bandwidth {
 	ktime_t period;
 	u64 quota, runtime;
 	s64 hierarchical_quota;
-	u64 runtime_expires;
 
 	int idle, period_active;
 	struct hrtimer period_timer, slack_timer;
@@ -429,7 +428,6 @@ struct cfs_rq {
 
 
 	int runtime_enabled;
-	u64 runtime_expires;
 	s64 runtime_remaining;
 
 	u64 throttled_clock, throttled_clock_task;
@@ -1262,6 +1260,7 @@ static const u32 prio_to_wmult[40] = {
 #define DEQUEUE_SLEEP		0x01
 #define DEQUEUE_SAVE		0x02 /* matches ENQUEUE_RESTORE */
 #define DEQUEUE_MOVE		0x04 /* matches ENQUEUE_MOVE */
+#define DEQUEUE_IDLE		0x80 /* The last dequeue before IDLE */
 
 #define ENQUEUE_WAKEUP		0x01
 #define ENQUEUE_RESTORE		0x02
@@ -2094,7 +2093,8 @@ static inline void cpufreq_update_util(struct rq *rq, unsigned int flags)
 {
         struct update_util_data *data;
 
-        data = rcu_dereference_sched(*this_cpu_ptr(&cpufreq_update_util_data));
+		data = rcu_dereference_sched(*per_cpu_ptr(&cpufreq_update_util_data,
+						cpu_of(rq)));
         if (data)
                 data->func(data, rq_clock(rq), flags);
 }
