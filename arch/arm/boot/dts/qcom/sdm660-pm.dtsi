@@ -12,7 +12,7 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 
 &soc {
-	qcom,spm@178120000 {
+	qcom,spm@17812000 {
 		compatible = "qcom,spm-v2";
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -28,7 +28,7 @@
 		qcom,pfm-port = <0x2>;
 	};
 
-	qcom,spm@179120000 {
+	qcom,spm@17912000 {
 		compatible = "qcom,spm-v2";
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -307,13 +307,13 @@
 		qcom,master-offset = <4096>;
 	};
 
-	rpm_msg_ram: memory@0x200000 {
+	rpm_msg_ram: memory@200000 {
 		compatible = "qcom,rpm-msg-ram";
 		reg = <0x200000 0x1000>,
 			<0x290000 0x1000>;
 	};
 
-	rpm_code_ram: rpm-memory@0x778000 {
+	rpm_code_ram: rpm-memory@778000 {
 		compatible = "qcom,rpm-code-ram";
 		reg = <0x778000 0x5000>;
 	};

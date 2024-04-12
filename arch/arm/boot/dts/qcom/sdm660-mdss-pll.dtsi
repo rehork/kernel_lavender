@@ -83,7 +83,7 @@
 		};
 	};
 
-	mdss_dp_pll: qcom,mdss_dp_pll@c011000 {
+	mdss_dp_pll: qcom,mdss_dp_pll@c011c00 {
 		compatible = "qcom,mdss_dp_pll_sdm660";
 		status = "ok";
 		label = "MDSS DP PLL";

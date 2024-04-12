@@ -34,7 +34,7 @@
 
 	chosen {
 		stdout-path = "serial0";
-		bootargs = "rcupdate.rcu_expedited=1";
+		bootargs = "noirqdebug rcupdate.rcu_expedited=1 kpti=0";
 	};
 
 	psci {
@@ -403,12 +403,6 @@
 		#size-cells = <2>;
 		ranges;
 
-		wlan_msa_guard: wlan_msa_guard@85600000 {
-			compatible = "removed-dma-pool";
-			no-map;
-			reg = <0x0 0x85600000 0x0 0x100000>;
-		};
-
 		wlan_msa_mem: wlan_msa_mem@85700000 {
 			compatible = "removed-dma-pool";
 			no-map;
@@ -483,7 +477,7 @@
 			alloc-ranges = <0 0x00000000 0 0xffffffff>;
 			reusable;
 			alignment = <0 0x400000>;
-			size = <0 0x2c00000>;
+			size = <0 0x8000000>;
 			linux,cma-default;
 		};
 
@@ -492,12 +486,11 @@
 			label = "cont_splash_mem";
 		};
 
-		dfps_data_mem: dfps_data_mem@0x9f7ff000 {
+		dfps_data_mem: dfps_data_mem@9f7ff000 {
 		       reg = <0 0x9f800000 0 0x00001000>;
 		       label = "dfps_data_mem";
 		};
-	};
-
+    };
 	bluetooth: bt_wcn3990 {
 		compatible = "qca,wcn3990";
 		qca,bt-vdd-core-supply = <&pm660_l9>;
@@ -519,7 +512,6 @@
 };
 
 #include "sdm660-smp2p.dtsi"
-#include "sdm660-coresight.dtsi"
 &soc {
 	#address-cells = <1>;
 	#size-cells = <1>;
@@ -549,7 +541,7 @@
 		clock-frequency = <19200000>;
 	};
 
-	dma_blsp1: qcom,sps-dma@0xc144000{ /* BLSP1 */
+	dma_blsp1: qcom,sps-dma@c144000{ /* BLSP1 */
 		#dma-cells = <4>;
 		compatible = "qcom,sps-dma";
 		reg = <0xc144000 0x1F000>;
@@ -557,7 +549,7 @@
 		qcom,summing-threshold = <0x10>;
 	};
 
-	dma_blsp2: qcom,sps-dma@0xc184000{ /* BLSP2 */
+	dma_blsp2: qcom,sps-dma@c184000{ /* BLSP2 */
 		#dma-cells = <4>;
 		compatible = "qcom,sps-dma";
 		reg = <0xc184000 0x1F000>;
@@ -751,7 +743,7 @@
 					3200 3200 3200 3200 3200 3200>;
 	};
 
-	uartblsp1dm1: serial@0c170000 {
+	uartblsp1dm1: serial@c170000 {
 		compatible = "qcom,msm-uartdm-v1.4", "qcom,msm-uartdm";
 		reg = <0xc170000 0x1000>;
 		interrupts = <0 108 0>;
@@ -907,7 +899,7 @@
 	qcom,msm-thermal {
 		compatible = "qcom,msm-thermal";
 		qcom,sensor-id = <1>;
-		qcom,poll-ms = <100>;
+		qcom,poll-ms = <1000>;
 		qcom,therm-reset-temp = <115>;
 		qcom,core-limit-temp = <70>;
 		qcom,core-temp-hysteresis = <10>;
@@ -976,8 +968,9 @@
 	qcom,msm-core@780000 {
 		compatible = "qcom,apss-core-ea";
 		reg = <0x780000 0x1000>;
-		qcom,low-hyst-temp = <100>;
-		qcom,high-hyst-temp = <100>;
+		qcom,low-hyst-temp = <10>;
+		qcom,high-hyst-temp = <5>;
+		qcom,polling-interval = <100>;
 
 		ea0: ea0 {
 			sensor = <&sensor_information1>;
@@ -1012,7 +1005,7 @@
 		};
 	};
 
-	uartblsp2dm1: serial@0c1b0000 {
+	uartblsp2dm1: serial@c1b0000 {
 		compatible = "qcom,msm-uartdm-v1.4", "qcom,msm-uartdm";
 		reg = <0xc1b0000 0x1000>;
 		interrupts = <0 114 0>;
@@ -1184,7 +1177,7 @@
 		reg = <0x1791101c 0x4>;
 	};
 
-	gpu_debug: syscon@05065120 {
+	gpu_debug: syscon@5065120 {
 		compatible = "syscon";
 		reg = <0x05065120 0x4>;
 	};
@@ -1229,7 +1222,7 @@
 			<  6881 /* 1804 MHz */ >;
 	};
 
-	bwmon: qcom,cpu-bwmon {
+	bwmon: qcom,cpu-bwmon@1008000 {
 		compatible = "qcom,bimc-bwmon4";
 		reg = <0x01008000 0x300>, <0x01001000 0x200>;
 		reg-names = "base", "global_base";
@@ -2523,6 +2516,7 @@
 		clock-names = "core_clk", "core_a_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU0>;
+		status = "disabled";
 	};
 
 	jtag_mm1: jtagmm@7940000 {
@@ -2535,6 +2529,7 @@
 		clock-names = "core_clk", "core_a_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU1>;
+		status = "disabled";
 	};
 
 	jtag_mm2: jtagmm@7a40000 {
@@ -2547,6 +2542,7 @@
 		clock-names = "core_clk", "core_a_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU2>;
+		status = "disabled";
 	};
 
 	jtag_mm3: jtagmm@7b40000 {
@@ -2559,6 +2555,7 @@
 		clock-names = "core_clk", "core_a_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU3>;
+		status = "disabled";
 	};
 
 	jtag_mm4: jtagmm@7c40000 {
@@ -2571,6 +2568,7 @@
 		clock-names = "core_clk", "core_a_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU4>;
+		status = "disabled";
 	};
 
 	jtag_mm5: jtagmm@7d40000 {
@@ -2583,6 +2581,7 @@
 		clock-names = "core_clk", "core_a_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU5>;
+		status = "disabled";
 	};
 
 	jtag_mm6: jtagmm@7e40000 {
@@ -2595,6 +2594,7 @@
 		clock-names = "core_clk", "core_a_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU6>;
+		status = "disabled";
 	};
 
 	jtag_mm7: jtagmm@7f40000 {
@@ -2607,6 +2607,7 @@
 		clock-names = "core_clk", "core_a_clk";
 
 		qcom,coresight-jtagmm-cpu = <&CPU7>;
+		status = "disabled";
 	};
 };
 

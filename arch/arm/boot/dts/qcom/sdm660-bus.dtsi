@@ -13,7 +13,7 @@
 #include <dt-bindings/msm/msm-bus-ids.h>
 
 &soc {
-	ad_hoc_bus: ad-hoc-bus {
+	ad_hoc_bus: ad-hoc-bus@1620000 {
 		/*Version = 14 */
 		compatible = "qcom,msm-bus-device";
 		reg = <0x1620000 0x20000>,
