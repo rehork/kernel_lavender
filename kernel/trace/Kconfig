@@ -103,7 +103,6 @@ config QCOM_RTB
 	  Add support for logging different events to a small uncached
 	  region. This is designed to aid in debugging reset cases where the
 	  caches may not be flushed before the target resets.
-
 config QCOM_RTB_SEPARATE_CPUS
 	bool "Separate entries for each cpu"
 	depends on QCOM_RTB
@@ -123,7 +122,6 @@ config QCOM_RTB_SEPARATE_CPUS
 
 config TRACING
 	bool
-	select DEBUG_FS
 	select RING_BUFFER
 	select STACKTRACE if STACKTRACE_SUPPORT
 	select TRACEPOINTS
@@ -430,7 +428,6 @@ config BLK_DEV_IO_TRACE
 	depends on SYSFS
 	depends on BLOCK
 	select RELAY
-	select DEBUG_FS
 	select TRACEPOINTS
 	select GENERIC_TRACER
 	select STACKTRACE
