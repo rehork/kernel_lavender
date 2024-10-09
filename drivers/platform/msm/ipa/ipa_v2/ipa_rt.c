@@ -54,7 +54,7 @@ int __ipa_generate_rt_hw_rule_v2(enum ipa_ip_type ip,
 	struct ipa_hdr_entry *hdr_entry;
 
 	if (buf == NULL) {
-		memset(tmp, 0, (IPA_RT_FLT_HW_RULE_BUF_SIZE/4));
+		memset(tmp, 0, sizeof(tmp));
 		buf = (u8 *)tmp;
 	}
 
@@ -63,7 +63,7 @@ int __ipa_generate_rt_hw_rule_v2(enum ipa_ip_type ip,
 	pipe_idx = ipa2_get_ep_mapping(entry->rule.dst);
 	if (pipe_idx == -1) {
 		IPAERR("Wrong destination pipe specified in RT rule\n");
-		WARN_ON(1);
+		WARN_ON_ONCE(1);
 		return -EPERM;
 	}
 	if (!IPA_CLIENT_IS_CONS(entry->rule.dst)) {

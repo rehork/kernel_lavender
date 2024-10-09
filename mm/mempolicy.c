@@ -399,7 +399,7 @@ static void mpol_rebind_preferred(struct mempolicy *pol,
 static void mpol_rebind_policy(struct mempolicy *pol, const nodemask_t *newmask,
 				enum mpol_rebind_step step)
 {
-	if (!pol)
+	if (!pol || pol->mode == MPOL_LOCAL)
 		return;
 	if (!mpol_store_user_nodemask(pol) && step == MPOL_REBIND_ONCE &&
 	    nodes_equal(pol->w.cpuset_mems_allowed, *newmask))
@@ -2461,6 +2461,7 @@ alloc_new:
 	mpol_new = kmem_cache_alloc(policy_cache, GFP_KERNEL);
 	if (!mpol_new)
 		goto err_out;
+	atomic_set(&mpol_new->refcnt, 1);
 	goto restart;
 }
 
