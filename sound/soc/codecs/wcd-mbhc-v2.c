@@ -53,7 +53,7 @@
 #define FW_READ_ATTEMPTS 15
 #define FW_READ_TIMEOUT 4000000
 #define FAKE_REM_RETRY_ATTEMPTS 3
-#define MAX_IMPED 60000
+#define MAX_IMPED 100000
 
 #ifdef CONFIG_MACH_XIAOMI_WAYNE
 #define WCD_MBHC_BTN_PRESS_COMPL_TIMEOUT_MS  650
@@ -76,7 +76,6 @@ extern bool hs_record_active;
 static void wcd_enable_mbhc_supply(struct wcd_mbhc *mbhc,
 			enum wcd_mbhc_plug_type plug_type);
 #endif
-
 module_param(det_extn_cable_en, int,
 		S_IRUGO | S_IWUSR | S_IWGRP);
 MODULE_PARM_DESC(det_extn_cable_en, "enable/disable extn cable detect");
@@ -2091,7 +2090,6 @@ static irqreturn_t wcd_mbhc_hs_rem_irq(int irq, void *data)
 			} else
 #endif
 			goto report_unplug;
-
 		} else {
 			if (!mic_sch) {
 				mic_trigerred++;
@@ -2445,8 +2443,8 @@ static int wcd_mbhc_initialise(struct wcd_mbhc *mbhc)
 		/* Insertion debounce set to 48ms */
 		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_INSREM_DBNC, 4);
 	} else {
-		/* Insertion debounce set to 96ms */
-		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_INSREM_DBNC, 6);
+		/* Insertion debounce set to 512ms */
+		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_INSREM_DBNC, 0x0B);
 	}
 
 	/* Button Debounce set to 16ms */
@@ -3029,6 +3027,7 @@ int wcd_mbhc_init(struct wcd_mbhc *mbhc, struct snd_soc_codec *codec,
 	struct snd_soc_card *card = codec->component.card;
 	const char *hph_switch = "qcom,msm-mbhc-hphl-swh";
 	const char *gnd_switch = "qcom,msm-mbhc-gnd-swh";
+	impedance_det_en = true;
 
 	pr_debug("%s: enter\n", __func__);
 

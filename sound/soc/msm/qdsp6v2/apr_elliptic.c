@@ -38,8 +38,6 @@ struct driver_sensor_event {
 	};
 };
 
-
-
 static int afe_set_parameter(int port,
 		int param_id,
 		int module_id,
@@ -161,7 +159,6 @@ fail_cmd:
 	kfree(packed_param_data);
 	return ret;
 }
-
 
 int32_t ultrasound_apr_set_parameter(int32_t port_id, uint32_t param_id,
 	u8 *user_params, int32_t length) {
