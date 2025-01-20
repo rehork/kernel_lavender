@@ -512,14 +512,27 @@ do_pass:
 				break;
 			}
 
-			/* Convert JEQ into JNE when 'jump_true' is next insn. */
-			if (fp->jt == 0 && BPF_OP(fp->code) == BPF_JEQ) {
-				insn->code = BPF_JMP | BPF_JNE | bpf_src;
+			/* Convert some jumps when 'jump_true' is next insn. */
+			if (fp->jt == 0) {
+				switch (BPF_OP(fp->code)) {
+				case BPF_JEQ:
+					insn->code = BPF_JMP | BPF_JNE | bpf_src;
+					break;
+				case BPF_JGT:
+					insn->code = BPF_JMP | BPF_JLE | bpf_src;
+					break;
+				case BPF_JGE:
+					insn->code = BPF_JMP | BPF_JLT | bpf_src;
+					break;
+				default:
+					goto jmp_rest;
+				}
+
 				target = i + fp->jf + 1;
 				BPF_EMIT_JMP;
 				break;
 			}
-
+jmp_rest:
 			/* Other jumps are mapped into two insns: Jxx and JA. */
 			target = i + fp->jt + 1;
 			insn->code = BPF_JMP | BPF_OP(fp->code) | bpf_src;
@@ -1398,7 +1411,7 @@ BPF_CALL_5(bpf_skb_store_bytes, struct sk_buff *, skb, u32, offset,
 
 	if (unlikely(flags & ~(BPF_F_RECOMPUTE_CSUM | BPF_F_INVALIDATE_HASH)))
 		return -EINVAL;
-	if (unlikely(offset > 0xffff))
+	if (unlikely(offset > INT_MAX))
 		return -EFAULT;
 	if (unlikely(bpf_try_make_writable(skb, offset + len)))
 		return -EFAULT;
@@ -1433,7 +1446,7 @@ BPF_CALL_4(bpf_skb_load_bytes, const struct sk_buff *, skb, u32, offset,
 {
 	void *ptr;
 
-	if (unlikely(offset > 0xffff))
+	if (unlikely(offset > INT_MAX))
 		goto err_clear;
 
 	ptr = skb_header_pointer(skb, offset, len, to);
@@ -2594,6 +2607,8 @@ sk_filter_func_proto(enum bpf_func_id func_id)
 		return &bpf_get_socket_cookie_proto;
 	case BPF_FUNC_get_socket_uid:
 		return &bpf_get_socket_uid_proto;
+	case BPF_FUNC_get_current_uid_gid:
+		return &bpf_get_current_uid_gid_proto;
 	default:
 		return NULL;
 	}

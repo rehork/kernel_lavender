@@ -889,6 +889,15 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
 	struct nlattr *key;
 	struct cfg80211_cached_keys *result;
 	int rem, err, def = 0;
+	bool have_key = false;
+
+	nla_for_each_nested(key, keys, rem) {
+		have_key = true;
+		break;
+	}
+
+	if (!have_key)
+		return NULL;
 
 	result = kzalloc(sizeof(*result), GFP_KERNEL);
 	if (!result)
@@ -932,6 +941,11 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
 			if (no_ht)
 				*no_ht = true;
 		}
+	}
+
+	if (result->def < 0) {
+		err = -EINVAL;
+		goto error;
 	}
 
 	return result;
@@ -12802,7 +12816,8 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
 }
 
 void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8 *addr,
-					const u8* ie, u8 ie_len, gfp_t gfp)
+					const u8 *ie, u8 ie_len,
+					int sig_dbm, gfp_t gfp)
 {
 	struct wireless_dev *wdev = dev->ieee80211_ptr;
 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
@@ -12828,7 +12843,9 @@ void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8 *addr,
 	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, dev->ifindex) ||
 	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, addr) ||
 	    (ie_len && ie &&
-	     nla_put(msg, NL80211_ATTR_IE, ie_len , ie)))
+	     nla_put(msg, NL80211_ATTR_IE, ie_len, ie)) ||
+	    (sig_dbm &&
+	     nla_put_u32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm)))
 		goto nla_put_failure;
 
 	genlmsg_end(msg, hdr);

@@ -1128,6 +1128,10 @@ int cfg80211_connect(struct cfg80211_registered_device *rdev,
 				connect->crypto.ciphers_pairwise[0] = cipher;
 			}
 		}
+	} else {
+		if (WARN_ON(connkeys))
+			return -EINVAL;
+
 		/* connect can point to wdev->wext.connect which
 		 * can hold key data from a previous connection
 		 */
