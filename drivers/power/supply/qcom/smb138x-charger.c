@@ -290,7 +290,7 @@ static int smb138x_usb_set_prop(struct power_supply *psy,
 		rc = smblib_set_prop_sdp_current_max(chg, val);
 		break;
 	default:
-		pr_err("set prop %d is not supported\n", prop);
+		pr_debug("set prop %d is not supported\n", prop);
 		return -EINVAL;
 	}
 
@@ -309,7 +309,7 @@ static int smb138x_init_usb_psy(struct smb138x *chip)
 	struct smb_charger *chg = &chip->chg;
 
 	chg->usb_psy_desc.name = "usb";
-	chg->usb_psy_desc.type = POWER_SUPPLY_TYPE_UNKNOWN;
+	chg->usb_psy_desc.type = POWER_SUPPLY_TYPE_USB;
 	chg->usb_psy_desc.properties = smb138x_usb_props;
 	chg->usb_psy_desc.num_properties = ARRAY_SIZE(smb138x_usb_props);
 	chg->usb_psy_desc.get_property = smb138x_usb_get_prop;

@@ -543,7 +543,7 @@ static void qpnp_handle_sc_irq(struct work_struct *work)
 {
 	struct qpnp_hap *hap = container_of(work,
 				struct qpnp_hap, sc_work.work);
-	u8 val;
+	u8 val = 0;
 
 	qpnp_hap_read_reg(hap, QPNP_HAP_STATUS(hap->base), &val);
 
