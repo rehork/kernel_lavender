@@ -52,4 +52,3 @@ extern struct class *elliptic_class;
 
 #define EL_PRINT_D(string, arg...) \
 	pr_debug("[ELUS] : (%s) : " string "\n", __func__, ##arg)
-
