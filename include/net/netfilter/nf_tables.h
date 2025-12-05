@@ -286,6 +286,7 @@ void nft_unregister_set(struct nft_set_ops *ops);
  *
  *	@list: table set list node
  *	@bindings: list of set bindings
+ *	@table: table this set belongs to
  * 	@name: name of the set
  * 	@ktype: key type (numeric type defined by userspace, not used in the kernel)
  * 	@dtype: data type (verdict or numeric type defined by userspace)
@@ -305,6 +306,7 @@ void nft_unregister_set(struct nft_set_ops *ops);
 struct nft_set {
 	struct list_head		list;
 	struct list_head		bindings;
+	struct nft_table		*table;
 	char				name[IFNAMSIZ];
 	u32				ktype;
 	u32				dtype;
@@ -327,6 +329,11 @@ struct nft_set {
 static inline void *nft_set_priv(const struct nft_set *set)
 {
 	return (void *)set->data;
+}
+
+static inline enum nft_data_types nft_set_datatype(const struct nft_set *set)
+{
+	return set->dtype == NFT_DATA_VERDICT ? NFT_DATA_VERDICT : NFT_DATA_VALUE;
 }
 
 static inline struct nft_set *nft_set_container_of(const void *priv)
