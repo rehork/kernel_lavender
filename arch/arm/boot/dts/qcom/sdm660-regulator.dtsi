@@ -516,7 +516,7 @@
 
 &soc {
 	/* MEM ACC regulators */
-	gfx_mem_acc_vreg: regulator@01fcf004 {
+	gfx_mem_acc_vreg: regulator@1fcf004 {
 		compatible = "qcom,mem-acc-regulator";
 		reg = <0x01fcf004 0x4>;
 		reg-names = "acc-sel-l1";
@@ -529,7 +529,7 @@
 		qcom,acc-sel-l1-bit-size = <1>;
 	};
 
-	gfx_ldo_vreg: ldo@0506e000 {
+	gfx_ldo_vreg: ldo@506e000 {
 		compatible = "qcom,sdm660-gfx-ldo";
 		reg = <0x0506e000 0x34>;
 		reg-names = "ldo_addr";
@@ -540,7 +540,7 @@
 
 /* CPR controller regulators */
 	/* MMSS CPR Controller node */
-	gfx_cpr: cpr4-ctrl@05061000 {
+	gfx_cpr: cpr4-ctrl@5061000 {
 		compatible = "qcom,cpr4-sdm660-mmss-ldo-regulator";
 		reg = <0x05061000 0x4000>, <0x00784000 0x1000>;
 		reg-names = "cpr_ctrl", "fuse_base";

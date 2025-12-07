@@ -34,7 +34,7 @@
 
 	chosen {
 		stdout-path = "serial0";
-		bootargs = "noirqdebug rcupdate.rcu_expedited=1 kpti=0";
+		bootargs = "quiet noirqdebug rcupdate.rcu_expedited=1 kpti=0";
 	};
 
 	psci {
@@ -50,7 +50,6 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x0>;
-                        clock-frequency = <1843200000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile0>;
 			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
@@ -81,7 +80,6 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x1>;
-                        clock-frequency = <1843200000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile0>;
 			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
@@ -106,7 +104,6 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x2>;
-                        clock-frequency = <1843200000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile0>;
 			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
@@ -131,7 +128,6 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x3>;
-                        clock-frequency = <1843200000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile0>;
 			sched-energy-costs = <&CPU_COST_0 &CLUSTER_COST_0>;
@@ -156,7 +152,6 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x100>;
-                        clock-frequency = <2208000000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile1>;
 			sched-energy-costs = <&CPU_COST_1 &CLUSTER_COST_1>;
@@ -185,7 +180,6 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x101>;
-                        clock-frequency = <2208000000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile2>;
 			sched-energy-costs = <&CPU_COST_1 &CLUSTER_COST_1>;
@@ -210,7 +204,6 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x102>;
-                        clock-frequency = <2208000000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile3>;
 			sched-energy-costs = <&CPU_COST_1 &CLUSTER_COST_1>;
@@ -235,7 +228,6 @@
 			device_type = "cpu";
 			compatible = "arm,armv8";
 			reg = <0x0 0x103>;
-                        clock-frequency = <2208000000>;
 			enable-method = "psci";
 			qcom,limits-info = <&mitigation_profile4>;
 			sched-energy-costs = <&CPU_COST_1 &CLUSTER_COST_1>;
@@ -403,6 +395,12 @@
 		#size-cells = <2>;
 		ranges;
 
+		wlan_msa_guard: wlan_msa_guard@85600000 {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0x0 0x85600000 0x0 0x100000>;
+		};
+
 		wlan_msa_mem: wlan_msa_mem@85700000 {
 			compatible = "removed-dma-pool";
 			no-map;
@@ -486,7 +484,7 @@
 			label = "cont_splash_mem";
 		};
 
-		dfps_data_mem: dfps_data_mem@0x9f7ff000 {
+		dfps_data_mem: dfps_data_mem@9f7ff000 {
 		       reg = <0 0x9f800000 0 0x00001000>;
 		       label = "dfps_data_mem";
 		};
@@ -541,7 +539,7 @@
 		clock-frequency = <19200000>;
 	};
 
-	dma_blsp1: qcom,sps-dma@0xc144000{ /* BLSP1 */
+	dma_blsp1: qcom,sps-dma@c144000{ /* BLSP1 */
 		#dma-cells = <4>;
 		compatible = "qcom,sps-dma";
 		reg = <0xc144000 0x1F000>;
@@ -549,7 +547,7 @@
 		qcom,summing-threshold = <0x10>;
 	};
 
-	dma_blsp2: qcom,sps-dma@0xc184000{ /* BLSP2 */
+	dma_blsp2: qcom,sps-dma@c184000{ /* BLSP2 */
 		#dma-cells = <4>;
 		compatible = "qcom,sps-dma";
 		reg = <0xc184000 0x1F000>;
@@ -743,7 +741,7 @@
 					3200 3200 3200 3200 3200 3200>;
 	};
 
-	uartblsp1dm1: serial@0c170000 {
+	uartblsp1dm1: serial@c170000 {
 		compatible = "qcom,msm-uartdm-v1.4", "qcom,msm-uartdm";
 		reg = <0xc170000 0x1000>;
 		interrupts = <0 108 0>;
@@ -1005,7 +1003,7 @@
 		};
 	};
 
-	uartblsp2dm1: serial@0c1b0000 {
+	uartblsp2dm1: serial@c1b0000 {
 		compatible = "qcom,msm-uartdm-v1.4", "qcom,msm-uartdm";
 		reg = <0xc1b0000 0x1000>;
 		interrupts = <0 114 0>;
@@ -1177,7 +1175,7 @@
 		reg = <0x1791101c 0x4>;
 	};
 
-	gpu_debug: syscon@05065120 {
+	gpu_debug: syscon@5065120 {
 		compatible = "syscon";
 		reg = <0x05065120 0x4>;
 	};
