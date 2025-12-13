@@ -82,7 +82,6 @@ void panic(const char *fmt, ...)
 	int state = 0;
 
 	trace_kernel_panic(0);
-
 	if (panic_on_warn) {
 		/*
 		 * This thread may hit another WARN() in the panic path.

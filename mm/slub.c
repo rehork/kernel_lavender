@@ -1656,18 +1656,12 @@ static inline void add_partial(struct kmem_cache_node *n,
 	__add_partial(n, page, tail);
 }
 
-static inline void
-__remove_partial(struct kmem_cache_node *n, struct page *page)
-{
-	list_del(&page->lru);
-	n->nr_partial--;
-}
-
 static inline void remove_partial(struct kmem_cache_node *n,
 					struct page *page)
 {
 	lockdep_assert_held(&n->list_lock);
-	__remove_partial(n, page);
+	list_del(&page->lru);
+	n->nr_partial--;
 }
 
 /*
@@ -2444,6 +2438,7 @@ redo:
 			deactivate_slab(s, page, c->freelist);
 			c->page = NULL;
 			c->freelist = NULL;
+			c->tid = next_tid(c->tid);
 			goto new_slab;
 		}
 	}
@@ -2457,6 +2452,7 @@ redo:
 		deactivate_slab(s, page, c->freelist);
 		c->page = NULL;
 		c->freelist = NULL;
+		c->tid = next_tid(c->tid);
 		goto new_slab;
 	}
 
@@ -2469,6 +2465,7 @@ redo:
 
 	if (!freelist) {
 		c->page = NULL;
+		c->tid = next_tid(c->tid);
 		stat(s, DEACTIVATE_BYPASS);
 		goto new_slab;
 	}
@@ -2493,6 +2490,7 @@ new_slab:
 		c->partial = page->next;
 		stat(s, CPU_PARTIAL_ALLOC);
 		c->freelist = NULL;
+		c->tid = next_tid(c->tid);
 		goto redo;
 	}
 
@@ -2515,6 +2513,7 @@ new_slab:
 	deactivate_slab(s, page, get_freepointer(s, freelist));
 	c->page = NULL;
 	c->freelist = NULL;
+	c->tid = next_tid(c->tid);
 	return freelist;
 }
 
@@ -3286,6 +3285,12 @@ static void free_kmem_cache_nodes(struct kmem_cache *s)
 	}
 }
 
+void __kmem_cache_release(struct kmem_cache *s)
+{
+	free_percpu(s->cpu_slab);
+	free_kmem_cache_nodes(s);
+}
+
 static int init_kmem_cache_nodes(struct kmem_cache *s)
 {
 	int node;
@@ -3552,28 +3557,31 @@ static void list_slab_objects(struct kmem_cache *s, struct page *page,
 
 /*
  * Attempt to free all partial slabs on a node.
- * This is called from kmem_cache_close(). We must be the last thread
- * using the cache and therefore we do not need to lock anymore.
+ * This is called from __kmem_cache_shutdown(). We must take list_lock
+ * because sysfs file might still access partial list after the shutdowning.
  */
 static void free_partial(struct kmem_cache *s, struct kmem_cache_node *n)
 {
 	struct page *page, *h;
 
+	BUG_ON(irqs_disabled());
+	spin_lock_irq(&n->list_lock);
 	list_for_each_entry_safe(page, h, &n->partial, lru) {
 		if (!page->inuse) {
-			__remove_partial(n, page);
+			remove_partial(n, page);
 			discard_slab(s, page);
 		} else {
 			list_slab_objects(s, page,
-			"Objects remaining in %s on kmem_cache_close()");
+			"Objects remaining in %s on __kmem_cache_shutdown()");
 		}
 	}
+	spin_unlock_irq(&n->list_lock);
 }
 
 /*
  * Release all resources used by a slab cache.
  */
-static inline int kmem_cache_close(struct kmem_cache *s)
+int __kmem_cache_shutdown(struct kmem_cache *s)
 {
 	int node;
 	struct kmem_cache_node *n;
@@ -3585,14 +3593,7 @@ static inline int kmem_cache_close(struct kmem_cache *s)
 		if (n->nr_partial || slabs_node(s, node))
 			return 1;
 	}
-	free_percpu(s->cpu_slab);
-	free_kmem_cache_nodes(s);
 	return 0;
-}
-
-int __kmem_cache_shutdown(struct kmem_cache *s)
-{
-	return kmem_cache_close(s);
 }
 
 /********************************************************************
@@ -3820,7 +3821,7 @@ int __kmem_cache_shrink(struct kmem_cache *s, bool deactivate)
 		 * s->cpu_partial is checked locklessly (see put_cpu_partial),
 		 * so we have to make sure the change is visible.
 		 */
-		kick_all_cpus_sync();
+		synchronize_sched();
 	}
 
 	flush_all(s);
@@ -4130,7 +4131,7 @@ int __kmem_cache_create(struct kmem_cache *s, unsigned long flags)
 	memcg_propagate_slab_attrs(s);
 	err = sysfs_slab_add(s);
 	if (err)
-		kmem_cache_close(s);
+		__kmem_cache_release(s);
 
 	return err;
 }
@@ -5510,7 +5511,8 @@ static char *create_unique_id(struct kmem_cache *s)
 	char *name = kmalloc(ID_STR_LENGTH, GFP_KERNEL);
 	char *p = name;
 
-	BUG_ON(!name);
+	if (!name)
+		return ERR_PTR(-ENOMEM);
 
 	*p++ = ':';
 	/*
@@ -5556,6 +5558,8 @@ static int sysfs_slab_add(struct kmem_cache *s)
 		 * for the symlinks.
 		 */
 		name = create_unique_id(s);
+		if (IS_ERR(name))
+			return PTR_ERR(name);
 	}
 
 	s->kobj.kset = cache_kset(s);

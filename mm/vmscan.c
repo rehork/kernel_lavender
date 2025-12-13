@@ -146,7 +146,7 @@ struct scan_control {
 /*
  * From 0 .. 100.  Higher means more swappy.
  */
-int vm_swappiness = 20;
+int vm_swappiness = 40;
 /*
  * The total number of pages which are beyond the high watermark within all
  * zones.
@@ -3924,7 +3924,7 @@ int zone_reclaim(struct zone *zone, gfp_t gfp_mask, unsigned int order)
 		return ZONE_RECLAIM_NOSCAN;
 
 	ret = __zone_reclaim(zone, gfp_mask, order);
-	clear_bit(ZONE_RECLAIM_LOCKED, &zone->flags);
+	clear_bit_unlock(ZONE_RECLAIM_LOCKED, &zone->flags);
 
 	if (!ret)
 		count_vm_event(PGSCAN_ZONE_RECLAIM_FAILED);
