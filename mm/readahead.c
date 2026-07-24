@@ -90,7 +90,7 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
 		page = list_to_page(pages);
 		list_del(&page->lru);
 		if (add_to_page_cache_lru(page, mapping, page->index,
-				mapping_gfp_constraint(mapping, GFP_KERNEL))) {
+				readahead_gfp_mask(mapping))) {
 			read_cache_pages_invalidate_page(mapping, page);
 			continue;
 		}
@@ -109,7 +109,7 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
 EXPORT_SYMBOL(read_cache_pages);
 
 static int read_pages(struct address_space *mapping, struct file *filp,
-		struct list_head *pages, unsigned nr_pages)
+		struct list_head *pages, unsigned int nr_pages, gfp_t gfp)
 {
 	struct blk_plug plug;
 	unsigned page_idx;
@@ -127,10 +127,8 @@ static int read_pages(struct address_space *mapping, struct file *filp,
 	for (page_idx = 0; page_idx < nr_pages; page_idx++) {
 		struct page *page = list_to_page(pages);
 		list_del(&page->lru);
-		if (!add_to_page_cache_lru(page, mapping, page->index,
-				mapping_gfp_constraint(mapping, GFP_KERNEL))) {
+		if (!add_to_page_cache_lru(page, mapping, page->index, gfp))
 			mapping->a_ops->readpage(filp, page);
-		}
 		page_cache_release(page);
 	}
 	ret = 0;
@@ -160,6 +158,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 	int page_idx;
 	int ret = 0;
 	loff_t isize = i_size_read(inode);
+	gfp_t gfp_mask = readahead_gfp_mask(mapping);
 
 	if (isize == 0)
 		goto out;
@@ -181,7 +180,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 		if (page && !radix_tree_exceptional_entry(page))
 			continue;
 
-		page = page_cache_alloc_readahead(mapping);
+		page = __page_cache_alloc(gfp_mask);
 		if (!page)
 			break;
 		page->index = page_offset;
@@ -197,7 +196,7 @@ int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 	 * will then handle the error.
 	 */
 	if (ret)
-		read_pages(mapping, filp, &page_pool, ret);
+		read_pages(mapping, filp, &page_pool, ret, gfp_mask);
 	BUG_ON(!list_empty(&page_pool));
 out:
 	return ret;
@@ -226,7 +225,7 @@ int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
 	while (nr_to_read) {
 		int err;
 
-		unsigned long this_chunk = (2 * 1024 * 1024) / PAGE_CACHE_SIZE;
+		unsigned long this_chunk = (2097152) >> PAGE_CACHE_SHIFT;
 
 		if (this_chunk > nr_to_read)
 			this_chunk = nr_to_read;
@@ -254,9 +253,9 @@ static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
 	unsigned long newsize = roundup_pow_of_two(size);
 
 	if (newsize <= 1)
-		newsize = newsize * 4;
-	else if (newsize <= max / 4)
-		newsize = newsize * 2;
+		newsize = newsize << 2;
+	else if (newsize <= (max >> 2))
+		newsize = newsize << 1;
 	else
 		newsize = max;
 
@@ -273,10 +272,10 @@ static unsigned long get_next_ra_size(struct file_ra_state *ra,
 	unsigned long cur = ra->size;
 	unsigned long newsize;
 
-	if (cur < max / 16)
-		newsize = 4 * cur;
+	if (cur < (max >> 4))
+		newsize = cur << 2;
 	else
-		newsize = 2 * cur;
+		newsize = cur << 1;
 
 	return min(newsize, max);
 }
@@ -363,7 +362,7 @@ static int try_context_readahead(struct address_space *mapping,
 	 * it is a strong indication of long-run stream (or whole-file-read)
 	 */
 	if (size >= offset)
-		size *= 2;
+		size <<= 1;
 
 	ra->start = offset;
 	ra->size = min(size + req_size, max);
