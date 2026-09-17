@@ -495,7 +495,6 @@ int msm_sensor_match_vendor_id(struct msm_sensor_ctrl_t *s_ctrl)
 	}
 	pr_err("%s: read vendor id: 0x%x expected id 0x%x:\n",
 			__func__, vendorid, s_ctrl->sensordata->vendor_id_info->vendor_id);
-
 	return rc;
 }
 #endif

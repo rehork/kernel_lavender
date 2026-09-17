@@ -924,7 +924,6 @@ static uint16_t msm_sensor_get_sensor_id_ovti_13855(
 		sensorid[13],
 		sensorid[14],
 		sensorid[15]);
-
 	return rc;
 }
 
@@ -980,7 +979,6 @@ static uint16_t msm_sensor_get_sensor_id_sony_486(
 		sensorid[8],
 		sensorid[9],
 		sensorid[10]);
-
 	return rc;
 }
 
@@ -1036,7 +1034,6 @@ static uint16_t msm_sensor_get_sensor_id_sony_376(
 		sensorid[8],
 		sensorid[9],
 		sensorid[10]);
-
 	return rc;
 }
 
@@ -1101,7 +1098,6 @@ static uint16_t msm_sensor_get_sensor_id_samsung_5e8(
 		sensorid[13],
 		sensorid[14],
 		sensorid[15]);
-
 	return rc;
 }
 
@@ -1165,7 +1161,6 @@ static uint16_t msm_sensor_get_sensor_id_samsung_2L7(
 		sensorid[13],
 		sensorid[14],
 		sensorid[15]);
-
 	return rc;
 }
 
@@ -1232,7 +1227,6 @@ static uint16_t msm_sensor_get_sensor_id_samsung_3T1(
 		sensorid[12],
 		sensorid[13],
 		sensorid[14]);
-
 	return rc;
 }
 #endif
@@ -1364,7 +1358,6 @@ static ssize_t msm_sensor_id_show(struct device *dev,
 		+ 1
 #endif
 	;
-
 	return rc;
 }
 
@@ -1373,7 +1366,6 @@ static DEVICE_ATTR(sensorid, 0444, msm_sensor_id_show, NULL);
 int32_t msm_sensorid_init_device_name(void)
 {
 	int32_t rc = 0;
-
 	CDBG("%s %d\n", __func__,__LINE__);
 
 	if (msm_sensorid_device != NULL) {
